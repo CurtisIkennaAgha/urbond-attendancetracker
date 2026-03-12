@@ -1,7 +1,23 @@
+"use client";
+import { useState } from "react";
+
 type RegisterCardProps = {
   name: string;
   lastUpdated: string;
 };
+
+function registers(cards: RegisterCardProps[]) {
+    const sortedCards = [...cards].sort(
+    (a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
+  );
+  return (
+    <main className="min-h-screen bg-white flex flex-col items-stretch justify-start p-4 gap-4">
+      {sortedCards.map((card, idx) => (
+        <RegisterCard key={idx} name={card.name} lastUpdated={card.lastUpdated} />
+      ))}
+    </main>
+  );
+}
 
 function RegisterCard({ name, lastUpdated }: RegisterCardProps) {
   return (
@@ -17,16 +33,26 @@ function RegisterCard({ name, lastUpdated }: RegisterCardProps) {
   );
 }
 
-function Header() {
+function Header({ search, setSearch }: { search: string; setSearch: (value: string) => void }) {
   return (
-    <header className="bg-black shadow p-8">
-      <img src="/logo.jpg" alt="Logo" />
-      <h1 className="text-2xl font-bold text-white">Attendance Tracker</h1>
+    <header className="bg-black shadow p-3 h-20 flex items-center">
+      <img src="/logo.jpg" alt="Logo" className=" w-45 object-contain" />
+      <h1 className="text-xl font-bold text-white">Attendance Tracker</h1>
+      <input
+        type="text"
+        placeholder="Search sessions..."
+        className="ml-auto px-3 py-2 rounded bg-white text-black focus:outline-none"
+        value={search ?? ""}
+        onChange={e => setSearch(e.target.value)}
+      />
     </header>
   );
 }
 
 export default function Home() {
+  // 1. State for search input
+  const [search, setSearch] = useState(""); 
+
   // Sample data
   const cards = [
     { name: "Session Name", lastUpdated: "April 27, 2024" },
@@ -34,14 +60,24 @@ export default function Home() {
     { name: "Third Session", lastUpdated: "February 10, 2026" },
   ];
 
-  return (
+  // 2. Filter cards based on search
+  const filteredCards = cards.filter(card =>
+    card.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // 3 Order cards by match to search 
+  const cardsWithMatchIndex = filteredCards.map(card => ({
+  ...card,
+  matchIndex: card.name.toLowerCase().indexOf(search.toLowerCase())
+  }));
+
+  // 4. Sort cards by match index
+  const sortedCards = cardsWithMatchIndex.sort((a, b) => a.matchIndex - b.matchIndex);
+
+ return (
     <>
-      <Header />
-      <main className="min-h-screen bg-white flex flex-col items-stretch justify-start p-4 gap-4">
-        {cards.map((card, idx) => (
-          <RegisterCard key={idx} name={card.name} lastUpdated={card.lastUpdated} />
-        ))}
-      </main>
+      <Header search={search} setSearch={setSearch} />
+      {registers(sortedCards)}
     </>
   );
 }
