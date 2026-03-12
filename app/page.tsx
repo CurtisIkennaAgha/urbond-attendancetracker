@@ -1,4 +1,5 @@
 "use client";
+import { create } from "domain";
 import { useState } from "react";
 
 type RegisterCardProps = {
@@ -6,12 +7,12 @@ type RegisterCardProps = {
   lastUpdated: string;
 };
 
-function registers(cards: RegisterCardProps[]) {
-    const sortedCards = [...cards].sort(
+function Registers({ cards }: { cards: RegisterCardProps[] }) {
+  const sortedCards = [...cards].sort(
     (a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
   );
   return (
-    <main className="min-h-screen bg-white flex flex-col items-stretch justify-start p-4 gap-4">
+    <main className=" bg-white flex flex-col items-stretch justify-start p-4 gap-4">
       {sortedCards.map((card, idx) => (
         <RegisterCard key={idx} name={card.name} lastUpdated={card.lastUpdated} />
       ))}
@@ -49,9 +50,41 @@ function Header({ search, setSearch }: { search: string; setSearch: (value: stri
   );
 }
 
+function CreateSessionButton({ onClick }: { onClick?: () => void }) {
+  return (
+    <button
+      className="bg-black text-white py-2 px-4 rounded flex justify-center mx-auto"
+      onClick={onClick}
+    >
+      + Create Session
+    </button>
+  );
+}
+
+// Reusable Modal component
+function Modal({ isOpen, onClose, children }: { isOpen: boolean; onClose: () => void; children: React.ReactNode }) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-10">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-[70vw] max-h-[90vh] relative">
+        <button
+          className="absolute top-2 right-2 text-gray-500 hover:text-black"
+          onClick={onClose}
+          aria-label="Close modal"
+        >
+          &times;
+        </button>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   // 1. State for search input
   const [search, setSearch] = useState(""); 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState<React.ReactNode>(null);
 
   // Sample data
   const cards = [
@@ -67,17 +100,50 @@ export default function Home() {
 
   // 3 Order cards by match to search 
   const cardsWithMatchIndex = filteredCards.map(card => ({
-  ...card,
-  matchIndex: card.name.toLowerCase().indexOf(search.toLowerCase())
+    ...card,
+    matchIndex: card.name.toLowerCase().indexOf(search.toLowerCase())
   }));
 
   // 4. Sort cards by match index
   const sortedCards = cardsWithMatchIndex.sort((a, b) => a.matchIndex - b.matchIndex);
 
- return (
+  function createSession() {
+    setModalContent(
+      <div>
+        <h2 className="text-xl font-bold mb-4 text-gray-900">Create Session</h2>
+        <form className="flex flex-col gap-4">
+          <label className="text-gray-500 ">Session Name</label>
+          <input
+            type="text"
+            className=" text-black w-full shadow-lg p-2 block bg-gray-100 mb-2"
+          />
+          <label className="text-gray-500 ">Initial Date</label>
+          <input
+            type="date"
+            className=" text-black w-full shadow-lg p-2 block bg-gray-100 mb-2"
+          />
+          <label className="text-gray-500 ">Session Type</label>
+          <select className=" text-black w-full shadow-lg p-2 block bg-gray-100 mb-2" defaultValue="">
+            <option value="" disabled>Select session type</option>
+            <option value="one-time">One Time Session</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+          <button type="submit" className="bg-black text-white px-4 py-2 rounded">Save</button>
+        </form>
+      </div>
+    );
+    setIsModalOpen(true);
+  }
+
+  return (
     <>
       <Header search={search} setSearch={setSearch} />
-      {registers(sortedCards)}
+      <Registers cards={sortedCards} />
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        {modalContent}
+      </Modal>
+      <CreateSessionButton onClick={createSession} />
     </>
   );
 }

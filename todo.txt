@@ -1,1 +1,3 @@
 header - logo , searchabr , idk 
+login 
+regsiters storedi supabase databes
