@@ -14,7 +14,6 @@ function SessionHeader({ sessionId, sessionName, registerDate, setRegisterDate }
   return (
     <header className="bg-white mb-6 "> 
       <h1 className="text-2xl text-gray-950 font-bold">Session: {sessionName}</h1>
-      <p className="text-gray-600">Session ID: {sessionId}</p>
       <div className="flex items-center gap-2 mb-2">
         <p className="text-gray-600 mb-0">Session Date:</p>
         <input
@@ -187,7 +186,11 @@ export default function SessionPage() {
       );
     }
   const params = useParams();
-  const sessionName = decodeURIComponent(params?.name || "");
+  let sessionNameParam = params?.name;
+  if (Array.isArray(sessionNameParam)) {
+    sessionNameParam = sessionNameParam[0] || "";
+  }
+  const sessionName = decodeURIComponent(sessionNameParam || "");
   const [sessionId, setSessionId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
