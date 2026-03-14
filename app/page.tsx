@@ -16,6 +16,7 @@ function SupabaseTest() {
 }
 
 type RegisterCardProps = {
+  id: string;
   name: string;
   lastUpdated: string;
 };
@@ -33,15 +34,19 @@ function Registers({ cards, loading, error }: { cards: RegisterCardProps[]; load
   return (
     <main className=" bg-white flex flex-col items-stretch justify-start p-4 gap-4">
       {sortedCards.map((card, idx) => (
-        <RegisterCard key={idx} name={card.name} lastUpdated={card.lastUpdated} />
+        <RegisterCard key={card.id} id={card.id} name={card.name} lastUpdated={card.lastUpdated} />
       ))}
     </main>
   );
 }
 
-function RegisterCard({ name, lastUpdated }: RegisterCardProps) {
+function RegisterCard({ id, name, lastUpdated }: RegisterCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-[0_0_5px_rgba(0,0,0,0.2)] p-6 font-poppins w-full flex items-center justify-between">
+    <a
+      href={`/${encodeURIComponent(name)}`}
+      className="bg-white rounded-lg shadow-[0_0_5px_rgba(0,0,0,0.2)] p-6 font-poppins w-full flex items-center justify-between hover:bg-gray-100 transition cursor-pointer"
+      style={{ textDecoration: 'none' }}
+    >
       <div>
         <div className="text-xl font-semibold mb-2 text-black">{name}</div>
         <p className="text-sm text-gray-500">Last updated: {lastUpdated}</p>
@@ -49,7 +54,7 @@ function RegisterCard({ name, lastUpdated }: RegisterCardProps) {
       <svg className="w-8 h-8 text-gray-400 ml-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
         <path d="M9 5l7 7-7 7" />
       </svg>
-    </div>
+    </a>
   );
 }
 
@@ -112,7 +117,7 @@ export default function Home() {
       setLoading(true);
       const { data, error } = await supabase
         .from('Sessions')
-        .select('name, last_updated');
+        .select('id, name, last_updated');
       if (error) {
         setError(error.message);
         setCards([]);
@@ -120,6 +125,7 @@ export default function Home() {
         console.log('Sessions table contents:', data);
         setCards(
           (data ?? []).map((row: any) => ({
+            id: row.id,
             name: row.name,
             lastUpdated: new Date(row.last_updated).toLocaleDateString(),
           }))
