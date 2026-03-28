@@ -22,9 +22,33 @@ type RegisterCardProps = {
 };
 
 function Registers({ cards, loading, error }: { cards: RegisterCardProps[]; loading: boolean; error: string | null }) {
-  const sortedCards = [...cards].sort(
-    (a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
-  );
+  const [lastUpdatedMap, setLastUpdatedMap] = useState<Record<string, string | undefined>>({});
+
+  useEffect(() => {
+    async function fetchAllLastUpdated() {
+      const updates: Record<string, string | undefined> = {};
+      for (const card of cards) {
+        const { data: attendance } = await supabase
+          .from('attendance')
+          .select('attended_at')
+          .eq('session_id', card.id);
+        if (attendance && attendance.length > 0) {
+          const dates = attendance.map((a: any) => new Date(a.attended_at));
+          const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+          // Format as dd/mm/yyyy
+          const day = String(maxDate.getDate()).padStart(2, '0');
+          const month = String(maxDate.getMonth() + 1).padStart(2, '0');
+          const year = maxDate.getFullYear();
+          updates[card.id] = `${day}/${month}/${year}`;
+        } else {
+          updates[card.id] = undefined;
+        }
+      }
+      setLastUpdatedMap(updates);
+    }
+    if (cards.length > 0) fetchAllLastUpdated();
+  }, [cards]);
+
   if (loading) {
     return <div className="p-4 text-gray-500">Loading sessions...</div>;
   }
@@ -33,8 +57,13 @@ function Registers({ cards, loading, error }: { cards: RegisterCardProps[]; load
   }
   return (
     <main className=" bg-white flex flex-col items-stretch justify-start p-4 gap-4">
-      {sortedCards.map((card, idx) => (
-        <RegisterCard key={card.id} id={card.id} name={card.name} lastUpdated={card.lastUpdated} />
+      {cards.map((card, idx) => (
+        <RegisterCard
+          key={card.id}
+          id={card.id}
+          name={card.name}
+          lastUpdated={lastUpdatedMap[card.id]}
+        />
       ))}
     </main>
   );
@@ -49,7 +78,7 @@ function RegisterCard({ id, name, lastUpdated }: RegisterCardProps) {
     >
       <div>
         <div className="text-xl font-semibold mb-2 text-black">{name}</div>
-        <p className="text-sm text-gray-500">Last updated: {lastUpdated}</p>
+        <p className="text-sm text-gray-500">Last updated: {lastUpdated ? lastUpdated : 'No attendance yet'}</p>
       </div>
       <svg className="w-8 h-8 text-gray-400 ml-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
         <path d="M9 5l7 7-7 7" />
@@ -66,7 +95,7 @@ function Header({ search, setSearch }: { search: string; setSearch: (value: stri
       <input
         type="text"
         placeholder="Search sessions..."
-        className="px-3 py-2 rounded bg-white text-black focus:outline-none flex-1 max-w-xs sm:max-w-sm md:max-w-md"
+        className="px-2 py-2 rounded bg-white text-black focus:outline-none w-full max-w-xs sm:max-w-sm md:max-w-md flex-1 min-w-0"
         value={search ?? ""}
         onChange={e => setSearch(e.target.value)}
       />
@@ -206,18 +235,6 @@ export default function Home() {
             className=" text-black w-full shadow-lg p-2 block bg-gray-100 mb-2"
             required
           />
-          <label className="text-gray-500 ">Session Type</label>
-          <select
-            name="sessionType"
-            className=" text-black w-full shadow-lg p-2 block bg-gray-100 mb-2"
-            defaultValue=""
-            required
-          >
-            <option value="" disabled>Select session type</option>
-            <option value="one-time">One Time Session</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
           <button type="submit" className="bg-black text-white px-4 py-2 rounded">Save</button>
         </form>
       </div>
