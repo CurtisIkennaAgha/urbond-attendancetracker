@@ -18,7 +18,7 @@ function SupabaseTest() {
 type RegisterCardProps = {
   id: string;
   name: string;
-  lastUpdated: string;
+  lastUpdated: string | undefined;
 };
 
 function Registers({ cards, loading, error }: { cards: RegisterCardProps[]; loading: boolean; error: string | null }) {
