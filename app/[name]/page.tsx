@@ -3,6 +3,55 @@
 import { useParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+// Simple empty modal for Need Help
+function NeedHelpModal({ onClose }: { onClose: () => void }) {
+  // Device detection: true if mobile, false if desktop
+  const isMobile = typeof window !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(window.navigator.userAgent);
+  const videoSrc = isMobile ? '/mobilerecording.mp4' : '/desktoprecording.mp4';
+  const videoLabel = isMobile ? 'Mobile Walkthrough' : 'Desktop Walkthrough';
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-30">
+      <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-auto text-left flex flex-col justify-start relative">
+        <button
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold focus:outline-none"
+          aria-label="Close"
+          onClick={onClose}
+        >
+          &times;
+        </button>
+        <h2 className="text-lg font-bold mb-4 text-gray-800 text-center">How to Use the Attendance Tracker</h2>
+        <div className="mb-6">
+          <video controls className="mx-auto rounded shadow max-w-full max-h-[40vh]">
+            <source src={videoSrc} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        <ol className="list-decimal pl-5 mb-4 text-gray-700 space-y-2 text-sm">
+          <li><b>View Sessions:</b> Select or search for a session to view its details and attendees.</li>
+          <li><b>Change Session Date:</b> Use the arrows or date picker to switch between different session dates.</li>
+          <li><b>Add Attendee:</b> Enter the attendee's name and age in the empty row at the bottom, then check the box to add them to the session.</li>
+          <li><b>Edit Attendee:</b> Modify the name or age directly in the list if needed. <span className="text-xs text-gray-500">(When editing an auto-filled register, all visible attendees are saved for that date.)</span></li>
+          <li><b>Remove Attendee:</b> Uncheck the box next to an attendee to remove them from the session.</li>
+          <li><b>Clear Register:</b> Click the <span className="inline-block px-2 py-1 bg-gray-300 rounded text-xs">Clear</span> button to remove all attendance for the current session and date.</li>
+          <li><b>No Session on Date:</b> If there is no session on a date, check the box under the auto-filled message to keep the register empty and prevent auto-fill for that date. Uncheck to restore auto-fill.</li>
+          <li><b>Edit Session Name:</b> Click the <span className="inline-block px-2 py-1 bg-gray-300 rounded text-xs">Edit</span> button to rename the session.</li>
+          <li><b>Delete Session:</b> Click the <span className="inline-block px-2 py-1 bg-gray-300 rounded text-xs">Remove</span> button to delete the session and all its data.</li>
+          <li><b>View Data:</b> Use the <span className="inline-block px-2 py-1 bg-gray-300 rounded text-xs">View Data</span> button to see session data and analytics.</li>
+          <li><b>Go Back:</b> Use the <span className="inline-block px-2 py-1 bg-gray-200 rounded text-xs">Go Back</span> button at the bottom left to return to the previous page.</li>
+        </ol>
+        <div className="mb-4 text-gray-600 text-sm text-center">If you need more help, contact your administrator.</div>
+        <div className="flex justify-center">
+          <button
+            className="px-4 py-2 bg-gray-200 rounded text-gray-800 hover:bg-gray-300"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 import { supabase } from '../../utils/supabaseClient';
 
 interface SessionHeaderProps {
@@ -17,10 +66,10 @@ function RemoveAttendeeModal({ onClose, onRemove, title }: { onClose: () => void
   return (
     <div className="fixed inset-0 z-50 pointer-events-none">
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center pointer-events-auto">
-        <h2 className="text-xl font-bold mb-4 text-gray-600">{title || 'Are you sure you want to remove this attendee?'}</h2>
+        <h2 className="text-xl font-bold mb-4 text-gray-800">{title || 'Are you sure you want to remove this attendee?'}</h2>
         <div className="flex justify-center gap-4 mt-6">
           <button className="px-4 py-2 bg-gray-200 rounded text-gray-800 hover:bg-gray-300" onClick={onClose}>Cancel</button>
-          <button className="px-4 py-2 bg-red-300 text-gray-600 rounded hover:bg-red-600" onClick={onRemove}>Remove</button>
+          <button className="px-4 py-2 bg-red-400 text-gray-800 rounded hover:bg-red-600" onClick={onRemove}>Remove</button>
         </div>
       </div>
     </div>
@@ -38,9 +87,9 @@ function SessionHeader({ sessionId, sessionName, registerDate, setRegisterDate }
     setRegisterDate(`${yyyy}-${mm}-${dd}`);
   }
   return (
-    <header className="bg-white mb-6 "> 
+    <header className="bg-white mb-3 "> 
       <h1 className="text-2xl text-gray-950 font-bold">Session: {sessionName}</h1>
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-2 ">{/* mb-1 instead of mb-2 to halve the gap */}
         <p className="text-gray-600 mb-0">Session Date:</p>
         <button
           type="button"
@@ -111,33 +160,109 @@ function RegisterSlot({ index, name, age, checked, editable = false, onNameChang
   );
 }
 
+// Enhanced: If no attendance for this date, auto-populate with all previous attendees for this session
 async function fetchRegisters(sessionId: string, date: string) {
+  // 1. Check if there is any attendance for this session and date
   const { data: attendance, error } = await supabase
     .from('attendance')
     .select('attendee_id')
     .eq('session_id', sessionId)
     .eq('attended_at', date);
-  if (error || !attendance) return [];
-  const attendeeIds = attendance.map(a => a.attendee_id);
-  const { data: attendees, error: attendeesError } = await supabase
-    .from('attendees')
-    .select('id, name, age')
-    .in('id', attendeeIds);
-  if (attendeesError || !attendees) return [];
-  return attendance.map(a => {
-    const attendee = attendees.find(at => at.id === a.attendee_id);
-    return { name: attendee?.name, age: attendee?.age };
-  });
-
+  if (error) return [];
+  if (attendance && attendance.length > 0) {
+    // There is attendance for this date, fetch attendee details as before
+    const attendeeIds = attendance.map(a => a.attendee_id);
+    const { data: attendees, error: attendeesError } = await supabase
+      .from('attendees')
+      .select('id, name, age')
+      .in('id', attendeeIds);
+    if (attendeesError || !attendees) return [];
+    return attendance.map(a => {
+      const attendee = attendees.find(at => at.id === a.attendee_id);
+      return { name: attendee?.name, age: attendee?.age };
+    });
+  } else {
+    // No attendance for this date: fetch all unique previous attendees for this session
+    const { data: allAttendance, error: allError } = await supabase
+      .from('attendance')
+      .select('attendee_id')
+      .eq('session_id', sessionId);
+    if (allError || !allAttendance || allAttendance.length === 0) return [];
+    // Get unique attendee IDs
+    const uniqueIds = Array.from(new Set(allAttendance.map(a => a.attendee_id)));
+    if (uniqueIds.length === 0) return [];
+    // Fetch attendee details
+    const { data: attendees, error: attendeesError } = await supabase
+      .from('attendees')
+      .select('id, name, age')
+      .in('id', uniqueIds);
+    if (attendeesError || !attendees) return [];
+    // Return all previous attendees for this session
+    return attendees.map(a => ({ name: a.name, age: a.age }));
+  }
 }
 
 export default function SessionPage() {
-            // const router = useRouter(); // Removed duplicate
-          const router = useRouter();
-        // Modal for session removal
-        const [showSessionRemoveModal, setShowSessionRemoveModal] = useState(false);
-      // ...existing code...
-      const [registers, setRegisters] = useState<{ name: string, age: string | number }[]>([]);
+  // Track if user marks 'no session' for this date
+  const [noSession, setNoSession] = useState(false);
+  // Track if the register was edited (for auto-filled new dates)
+  const [registerEdited, setRegisterEdited] = useState(false);
+  // Track if auto-filled rows have been saved for this date
+  const [autoFillSaved, setAutoFillSaved] = useState(false);
+  // State for editing session name in modal
+  const [editSessionName, setEditSessionName] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  // Save handler for session name
+  async function handleSaveSessionName() {
+    if (!editSessionName.trim() || !sessionId) return;
+    setEditLoading(true);
+    setEditError("");
+    try {
+      // Debug: log sessionId, type, and editSessionName
+      console.log('Attempting to update session', { sessionId, sessionIdType: typeof sessionId, editSessionName });
+      // Update session name in Supabase
+      const result = await supabase
+        .from('Sessions')
+        .update({ name: editSessionName.trim() })
+        .eq('id', sessionId);
+      console.log('Supabase update result:', result);
+      const { error, data } = result;
+      // Fetch the session by ID after update to verify
+      const verify = await supabase
+        .from('Sessions')
+        .select('*')
+        .eq('id', sessionId)
+        .single();
+      console.log('Session row after update:', verify);
+      if (error) {
+        setEditError(error.message || 'Failed to update session name.');
+        setEditLoading(false);
+        return;
+      }
+      setShowSessionEditModal(false);
+      setEditLoading(false);
+      setEditError("");
+      if (editSessionName !== sessionName) {
+        router.replace(`/${encodeURIComponent(editSessionName)}`);
+      }
+    } catch (e) {
+      setEditError('Unexpected error.');
+      setEditLoading(false);
+      console.error('Unexpected error in handleSaveSessionName:', e);
+    }
+  }
+  // const router = useRouter(); // Removed duplicate
+  const router = useRouter();
+  // Modal for session removal
+  const [showSessionRemoveModal, setShowSessionRemoveModal] = useState(false);
+  // Modal for session edit
+  const [showSessionEditModal, setShowSessionEditModal] = useState(false);
+  // Modal for Need Help
+  const [showNeedHelpModal, setShowNeedHelpModal] = useState(false);
+  // ...existing code...
+  const [registers, setRegisters] = useState<{ name: string, age: string | number }[]>([]);
 
   // --- Checkbox state for all register slots ---
   // HINT: This state tracks the checked state for each register slot (existing attendees)
@@ -225,19 +350,163 @@ export default function SessionPage() {
   });
     function renderRegisterSlots() {
       // Handler to toggle checkbox for existing registers
-      // HINT: This toggles the checked state for a specific attendee row
-    const handleToggle = (idx: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log(`Checkbox at index ${idx} changed to`, e.target.checked);
-      if (!e.target.checked) {
-        setRemovingAttendeeIdx(idx);
-      } else {
-        setCheckedStates(prev => {
-          const copy = [...prev];
-          copy[idx] = true;
-          return copy;
-        });
+
+      // Save or update attendance for an existing attendee
+      // Helper to upsert all current visible auto-filled rows to the DB
+      async function saveAllAutoFilledRows() {
+        if (!sessionId || !registerDate) return;
+        // Only upsert for rows that are checked (present in UI)
+        const upsertRows = [];
+        for (let i = 0; i < registers.length; i++) {
+          const reg = registers[i];
+          const name = reg.name?.toString().trim();
+          const ageNumber = Number(reg.age);
+          if (!name || isNaN(ageNumber) || !checkedStates[i]) continue;
+          // Find or create attendee
+          let attendeeId = null;
+          const { data: foundAttendee } = await supabase
+            .from('attendees')
+            .select('id')
+            .eq('name', name)
+            .eq('age', ageNumber)
+            .single();
+          if (foundAttendee && foundAttendee.id) {
+            attendeeId = foundAttendee.id;
+          } else {
+            const { data: newAttendee } = await supabase
+              .from('attendees')
+              .insert([{ name, age: ageNumber }])
+              .select('id')
+              .single();
+            if (newAttendee && newAttendee.id) {
+              attendeeId = newAttendee.id;
+            } else {
+              continue;
+            }
+          }
+          upsertRows.push({ session_id: sessionId, attendee_id: attendeeId, attended_at: registerDate });
+        }
+        if (upsertRows.length > 0) {
+          console.log('[saveAllAutoFilledRows] ATTEMPTING UPSERT for all auto-filled rows', upsertRows);
+          await supabase
+            .from('attendance')
+            .upsert(upsertRows, { onConflict: 'session_id,attendee_id,attended_at' });
+        }
+        setAutoFillSaved(true);
       }
-    };
+
+      async function saveOrUpdateAttendance(idx: number, name: string, age: string | number, checked: boolean) {
+        // If this is the first edit on an auto-filled register, upsert all rows first
+        if (autoFilled && !autoFillSaved) {
+          await saveAllAutoFilledRows();
+        }
+        console.log('[saveOrUpdateAttendance] idx:', idx, 'name:', name, 'age:', age, 'checked:', checked, 'sessionId:', sessionId, 'registerDate:', registerDate);
+        if (!sessionId || !registerDate || !name || !age) {
+          console.warn('[saveOrUpdateAttendance] Missing required data', { sessionId, registerDate, name, age });
+          return;
+        }
+        // Find or create attendee
+        let attendeeId = null;
+        const trimmedName = name.toString().trim();
+        const ageNumber = Number(age);
+        if (isNaN(ageNumber)) {
+          console.warn('[saveOrUpdateAttendance] Invalid age', age);
+          return;
+        }
+        const { data: foundAttendee, error: findAttendeeError } = await supabase
+          .from('attendees')
+          .select('id')
+          .eq('name', trimmedName)
+          .eq('age', ageNumber)
+          .single();
+        console.log('[saveOrUpdateAttendance] foundAttendee:', foundAttendee, 'error:', findAttendeeError);
+        if (foundAttendee && foundAttendee.id) {
+          attendeeId = foundAttendee.id;
+        } else {
+          // Create new attendee
+          const { data: newAttendee, error: newAttendeeError } = await supabase
+            .from('attendees')
+            .insert([{ name: trimmedName, age: ageNumber }])
+            .select('id')
+            .single();
+          console.log('[saveOrUpdateAttendance] newAttendee:', newAttendee, 'error:', newAttendeeError);
+          if (newAttendee && newAttendee.id) {
+            attendeeId = newAttendee.id;
+          } else {
+            console.warn('[saveOrUpdateAttendance] Failed to create attendee');
+            return;
+          }
+        }
+        if (checked) {
+          console.log('[saveOrUpdateAttendance] ATTEMPTING UPSERT attendance', {
+            session_id: sessionId,
+            attendee_id: attendeeId,
+            attended_at: registerDate
+          });
+          // Upsert attendance (insert if not exists)
+          const { error: upsertError, data: upsertData } = await supabase
+            .from('attendance')
+            .upsert([
+              {
+                session_id: sessionId,
+                attendee_id: attendeeId,
+                attended_at: registerDate,
+              },
+            ], { onConflict: 'session_id,attendee_id,attended_at' });
+          console.log('[saveOrUpdateAttendance] upsert attendance result:', upsertData, 'error:', upsertError);
+        } else {
+          console.log('[saveOrUpdateAttendance] ATTEMPTING DELETE attendance', {
+            session_id: sessionId,
+            attendee_id: attendeeId,
+            attended_at: registerDate
+          });
+          // Remove attendance
+          const { error: deleteError, data: deleteData } = await supabase
+            .from('attendance')
+            .delete()
+            .eq('session_id', sessionId)
+            .eq('attendee_id', attendeeId)
+            .eq('attended_at', registerDate);
+          console.log('[saveOrUpdateAttendance] delete attendance result:', deleteData, 'error:', deleteError);
+        }
+        // Refresh UI
+        const registers = await fetchRegisters(sessionId, registerDate);
+        setRegisters(registers);
+      }
+
+      const handleToggle = (idx: number) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+        setRegisterEdited(true);
+        const checked = e.target.checked;
+        if (!checked) {
+          setRemovingAttendeeIdx(idx);
+        } else {
+          setCheckedStates(prev => {
+            const copy = [...prev];
+            copy[idx] = true;
+            return copy;
+          });
+          // Save attendance for this attendee
+          const reg = registers[idx];
+          await saveOrUpdateAttendance(idx, reg.name, reg.age, true);
+        }
+      };
+
+      const handleNameChange = (idx: number) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+        setRegisterEdited(true);
+        const newName = e.target.value;
+        setRegisters(prev => prev.map((reg, i) => i === idx ? { ...reg, name: newName } : reg));
+        // Save attendance for this attendee (if checked)
+        const reg = registers[idx];
+        await saveOrUpdateAttendance(idx, newName, reg.age, checkedStates[idx]);
+      };
+      const handleAgeChange = (idx: number) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+        setRegisterEdited(true);
+        const newAge = e.target.value;
+        setRegisters(prev => prev.map((reg, i) => i === idx ? { ...reg, age: newAge } : reg));
+        // Save attendance for this attendee (if checked)
+        const reg = registers[idx];
+        await saveOrUpdateAttendance(idx, reg.name, newAge, checkedStates[idx]);
+      };
 
       return (
         <>
@@ -249,6 +518,8 @@ export default function SessionPage() {
               age={reg.age}
               checked={checkedStates[idx] ?? true}
               editable={true}
+              onNameChange={handleNameChange(idx)}
+              onAgeChange={handleAgeChange(idx)}
               onCheckedChange={handleToggle(idx)}
             />
           ))}
@@ -258,9 +529,16 @@ export default function SessionPage() {
             age={newAge}
             checked={newChecked}
             editable={true}
-            onNameChange={e => setNewName(e.target.value)}
-            onAgeChange={e => setNewAge(e.target.value)}
+            onNameChange={e => {
+              setRegisterEdited(true);
+              setNewName(e.target.value);
+            }}
+            onAgeChange={e => {
+              setRegisterEdited(true);
+              setNewAge(e.target.value);
+            }}
             onCheckedChange={async e => {
+              setRegisterEdited(true);
               const checked = e.target.checked;
               setNewChecked(checked);
               if (checked) {
@@ -282,9 +560,15 @@ export default function SessionPage() {
   const [error, setError] = useState<string | null>(null);
   // ...registers state is already declared above, remove this duplicate...
 
+  // Track if the register was auto-filled for a new date
+  const [autoFilled, setAutoFilled] = useState(false);
   useEffect(() => {
+    setAutoFillSaved(false); // Reset auto-fill save state on new date/session
+    setNoSession(false); // Reset noSession on date/session change
     async function fetchSessionIdAndRegisters() {
       setLoading(true);
+      setAutoFilled(false);
+      setRegisterEdited(false); // Reset edit state on new date/session
       console.log('Session name for fetch:', sessionName);
       const { data, error } = await supabase
         .from('Sessions')
@@ -302,18 +586,40 @@ export default function SessionPage() {
       setError(null);
       // Use the selected registerDate if set, otherwise don't fetch
       if (registerDate) {
-        const registers = await fetchRegisters(id, registerDate);
-        setRegisters(registers);
+        // Enhanced: detect if auto-filled
+        const { data: attendance } = await supabase
+          .from('attendance')
+          .select('attendee_id')
+          .eq('session_id', id)
+          .eq('attended_at', registerDate);
+        let autoFill = false;
+        if (!attendance || attendance.length === 0) {
+          // No attendance for this date, will auto-fill
+          autoFill = true;
+        }
+        // If noSession is true, do not auto-fill
+        if (noSession) {
+          setRegisters([]);
+          setAutoFilled(false);
+        } else {
+          const registers = await fetchRegisters(id, registerDate);
+          setRegisters(registers);
+          setAutoFilled(autoFill);
+        }
+        setRegisterEdited(false); // Reset edit state for new auto-filled date
       } else {
         setRegisters([]);
       }
       setLoading(false);
     }
     if (sessionName) fetchSessionIdAndRegisters();
-  }, [sessionName, registerDate]);
+    // Keep editSessionName in sync with sessionName
+    setEditSessionName(sessionName);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionName, registerDate, showSessionEditModal]);
 
   return (
-    <div className="p-8 relative min-h-screen">
+ <div className="p-8 relative min-h-screen">
       <button
         className="fixed bottom-4 left-4 text-gray-700 hover:underline hover:text-black bg-transparent border-none shadow-none p-0 m-0 text-lg flex items-center z-50"
         style={{ background: 'none', border: 'none' }}
@@ -367,9 +673,76 @@ export default function SessionPage() {
         setRegisterDate={setRegisterDate}
       />
       <div className="flex items-center gap-2 mb-2">
-        <button className="px-3 py-1.5 bg-blue-400 text-gray-800 rounded">View Data</button>
-        <button className="px-3 py-1.5 bg-red-400 text-gray-800 rounded" onClick={() => setShowSessionRemoveModal(true)}>Remove</button>
+        <button
+          className="px-3 py-1.5 bg-gray-300 text-gray-800 rounded"
+          onClick={() => router.push(`/${encodeURIComponent(sessionName)}/data`)}
+        >
+          Data
+        </button>
+        <button className="px-3 py-1.5 bg-gray-300 text-gray-800 rounded" onClick={() => setShowSessionEditModal(true)}>Edit</button>
+        <button className="px-3 py-1.5 bg-gray-300 text-gray-800 rounded" onClick={() => setShowSessionRemoveModal(true)}>Remove</button>
+        <button
+          className="px-3 py-1.5 bg-gray-300 text-gray-800 rounded"
+          onClick={async () => {
+            if (!sessionId || !registerDate) return;
+            if (!window.confirm('Are you sure you want to clear all attendance for this session and date?')) return;
+            await supabase
+              .from('attendance')
+              .delete()
+              .eq('session_id', sessionId)
+              .eq('attended_at', registerDate);
+            setRegisters([]);
+            setCheckedStates([]);
+          }}
+        >
+          Clear
+        </button>
+        <button
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 text-lg font-bold border border-gray-300 hover:bg-gray-300"
+          title="Need Help?"
+          onClick={() => setShowNeedHelpModal(true)}
+        >
+          ?
+        </button>
+            {showNeedHelpModal && (
+              <NeedHelpModal onClose={() => setShowNeedHelpModal(false)} />
+            )}
       </div>
+
+      {/* Edit Modal with session name input */}
+      {showSessionEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-30">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
+            <h2 className="text-xl font-bold mb-4 text-gray-800">Edit Session</h2>
+            <label className="block text-gray-700 mb-2 text-left" htmlFor="edit-session-name">Session Name</label>
+            <input
+              id="edit-session-name"
+              type="text"
+              className="border p-2 w-full mb-4 text-black bg-gray-100"
+              value={editSessionName}
+              onChange={e => setEditSessionName(e.target.value)}
+              disabled={editLoading}
+            />
+            {editError && <div className="text-red-500 mb-2">{editError}</div>}
+            <div className="flex justify-center gap-4">
+              <button
+                className="px-4 py-2 bg-gray-200 rounded text-gray-800 hover:bg-gray-300"
+                onClick={() => setShowSessionEditModal(false)}
+                disabled={editLoading}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                onClick={handleSaveSessionName}
+                disabled={editSessionName.trim() === "" || editLoading}
+              >
+                {editLoading ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
             {showSessionRemoveModal && (
               <RemoveAttendeeModal
                 onClose={() => setShowSessionRemoveModal(false)}
@@ -401,7 +774,42 @@ export default function SessionPage() {
         <p className="text-red-500">Error: {error}</p>
       ) : (
         <>
-          <h1 className="text-2xl text-gray-950 font-bold mb-4">Session Details</h1>
+          <div className="flex items-center gap-3 mb-2 mt-6">
+            <h1 className="text-2xl text-gray-950 font-bold">Session Details</h1>
+          
+          </div>
+          {autoFilled && !registerEdited && (
+            <>
+              <div className="mb-4 text-gray-500 text-sm">This register is auto-filled. Make any change to enable saving.</div>
+              <div className="mb-4 flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="no-session-checkbox"
+                  checked={noSession}
+                  onChange={e => {
+                    const checked = e.target.checked;
+                    setNoSession(checked);
+                    if (checked) {
+                      setRegisters([]);
+                      setAutoFilled(false);
+                    } else {
+                      // Re-fetch auto-filled data if unchecked
+                      if (sessionId && registerDate) {
+                        fetchRegisters(sessionId, registerDate).then(r => {
+                          setRegisters(r);
+                          setAutoFilled(true);
+                        });
+                      }
+                    }
+                  }}
+                  className="mr-2"
+                />
+                <label htmlFor="no-session-checkbox" className="text-gray-500 text-sm select-none">
+                  There is no session on this date (so it stays empty and does not auto-fill)
+                </label>
+              </div>
+            </>
+          )}
           {renderRegisterSlots()}
         </>
       )}
