@@ -1,5 +1,52 @@
 "use client";
 import { useState, useEffect } from "react";
+
+// Inline NeedHelpModal (copied from [name]/page.tsx, but without session-specific logic)
+function NeedHelpModal({ onClose }: { onClose: () => void }) {
+  // Device detection: true if mobile, false if desktop
+  const isMobile = typeof window !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(window.navigator.userAgent);
+  const videoSrc = isMobile ? '/mobilerecording.mp4' : '/desktoprecording.mp4';
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+      <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-auto text-left flex flex-col justify-start relative">
+        <button
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl font-bold focus:outline-none"
+          aria-label="Close"
+          onClick={onClose}
+        >
+          &times;
+        </button>
+        <h2 className="text-lg font-bold mb-4 text-gray-800 text-center">How to Use the Attendance Tracker</h2>
+        <div className="mb-6">
+          <video controls className="mx-auto rounded shadow max-w-full max-h-[40vh]">
+            <source src={videoSrc} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        <ol className="list-decimal pl-5 mb-4 text-gray-700 space-y-2 text-sm">
+          <li><b>View Sessions:</b> Select or search for a session to view its details and attendees.</li>
+          <li><b>Change Session Date:</b> Use the arrows or date picker to switch between different session dates.</li>
+          <li><b>Add Attendee:</b> Enter the attendee's name and age in the empty row at the bottom, then check the box to add them to the session.</li>
+          <li><b>Edit Attendee:</b> Modify the name or age directly in the list if needed.</li>
+          <li><b>Remove Attendee:</b> Uncheck the box next to an attendee to remove them from the session.</li>
+          <li><b>Edit Session Name:</b> Click the <span className="inline-block px-2 py-1 bg-gray-300 rounded text-xs">Edit</span> button to rename the session.</li>
+          <li><b>Delete Session:</b> Click the <span className="inline-block px-2 py-1 bg-gray-300 rounded text-xs">Remove</span> button to delete the session and all its data.</li>
+          <li><b>View Data:</b> Use the <span className="inline-block px-2 py-1 bg-gray-300 rounded text-xs">View Data</span> button to see session data and analytics.</li>
+          <li><b>Go Back:</b> Use the <span className="inline-block px-2 py-1 bg-gray-200 rounded text-xs">Go Back</span> button at the bottom left to return to the previous page.</li>
+        </ol>
+        <div className="mb-4 text-gray-600 text-sm text-center">If you need more help, contact your administrator.</div>
+        <div className="flex justify-center">
+          <button
+            className="px-4 py-2 bg-gray-200 rounded text-gray-800 hover:bg-gray-300"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 import { supabase } from '../utils/supabaseClient';
 // Supabase connection test component
 function SupabaseTest() {
@@ -18,7 +65,7 @@ function SupabaseTest() {
 type RegisterCardProps = {
   id: string;
   name: string;
-  lastUpdated: string | undefined;
+  lastUpdated: string;
 };
 
 function Registers({ cards, loading, error }: { cards: RegisterCardProps[]; loading: boolean; error: string | null }) {
@@ -135,6 +182,7 @@ function Modal({ isOpen, onClose, children }: { isOpen: boolean; onClose: () => 
 
 export default function Home() {
   const [search, setSearch] = useState(""); 
+  const [showHelpModal, setShowHelpModal] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState<React.ReactNode>(null);
   const [cards, setCards] = useState<RegisterCardProps[]>([]);
@@ -196,6 +244,7 @@ export default function Home() {
   // Sort cards by match index
   const sortedCards = cardsWithMatchIndex.sort((a, b) => a.matchIndex - b.matchIndex);
 
+  
   function createSessionModal() {
     setModalContent(
       <div>
@@ -207,7 +256,6 @@ export default function Home() {
             const form = e.target;
             const name = form.sessionName.value;
             const initialDate = form.initialDate.value;
-            const sessionType = form.sessionType.value;
             // Use initialDate as last_updated for now
             const { data, error } = await supabase
               .from('Sessions')
@@ -215,7 +263,6 @@ export default function Home() {
                 {
                   name,
                   last_updated: initialDate ? initialDate + 'T00:00:00+00' : null,
-                  session_type: sessionType
                 }
               ]);
             setIsModalOpen(false);
@@ -251,6 +298,15 @@ export default function Home() {
       <CreateSessionButton onClick={createSessionModal} />
       <Registers cards={sortedCards} loading={loading} error={error} />
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>{modalContent}</Modal>
+      {/* Floating Help Button */}
+      <button
+        className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-gray-400 text-white flex items-center justify-center shadow-lg  focus:outline-none"
+        title="Need Help?"
+        aria-label="Open help modal"
+        onClick={() => setShowHelpModal(true)}
+      >?
+      </button>
+      {showHelpModal && <NeedHelpModal onClose={() => setShowHelpModal(false)} />}
     </>
   );
 }
