@@ -109,7 +109,7 @@ function Registers({ cards, loading, error }: { cards: RegisterCardProps[]; load
           key={card.id}
           id={card.id}
           name={card.name}
-          lastUpdated={lastUpdatedMap[card.id]}
+          lastUpdated={lastUpdatedMap[card.id] ?? ""}
         />
       ))}
     </main>
