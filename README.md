@@ -1,39 +1,30 @@
-## Using this prject to learn React, Next.js, Tailwind, Supabase (PostgreSQL) stack
+## Project Overview
+
+This project is an Attendance Tracker built with React, Next.js, Tailwind CSS, and Supabase (PostgreSQL). It allows you to manage sessions, track attendance, export data, and more, with a modern and user-friendly interface.
+
+I developed this project for my employer local youth charity URBOND as i ntoiced manually tracking attendance in a whatsapp groupchat was slow and something i could fix
 
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## User Guide & Demo Video
 
-## Getting Started
+Below is a step-by-step guide for using the Attendance Tracker. You can watch the full demo video below for a walkthrough of all features:
 
-First, run the development server:
+<video src="./public/desktoprecording.mp4" controls width="600"></video>
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+**[Download or open the demo video directly](./public/desktoprecording.mp4)**
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Steps Covered in the Demo Video
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **View Sessions:** Select or search for a session to view its details and attendees.
+2. **Change Session Date:** Use the arrows or date picker to switch between different session dates.
+3. **Add Attendee:** Enter the attendee’s name and age in the empty row at the bottom, then check the box to add them.
+4. **Edit Attendee:** Edit the name or age directly in the list.
+5. **Remove Attendee:** Uncheck the box next to an attendee to remove them from the session.
+6. **Clear Register:** Click the “Clear” button to remove all attendance for the current session and date.
+7. **No Session on Date:** Check the “No session on this date” box to keep the register empty and prevent auto-fill. Uncheck to restore auto-fill.
+8. **Edit Session Name:** Click the “Edit” button to open the modal and rename the session.
+9. **Delete Session:** In the Edit modal, click the “Delete this session” link below the fields to delete the session.
+10. **View Data:** Click the “View Data” button to see session data and analytics.
+11. **Download Data:** Use the download buttons under each table title to export data in different formats.
+12. **Go Back:** Use the “Go Back” button at the top left to return to the previous page.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
