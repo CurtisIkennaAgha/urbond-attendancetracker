@@ -15,7 +15,12 @@ export default function SessionDataPage() {
       allAttendees: allAttendees,
     };
     const fileName = 'urbond-attendance-all-data';
-    let exportType = allDataDownloadType === 'Google Sheets' ? 'xls' : allDataDownloadType.toLowerCase();
+    let exportType: 'csv' | 'xls';
+    if (allDataDownloadType === 'Excel') {
+      exportType = 'xls';
+    } else {
+      exportType = 'csv';
+    }
     exportFromJSON({ data: allData, fileName, exportType });
     if (allDataDownloadType === 'Google Sheets') {
       setTimeout(() => {
