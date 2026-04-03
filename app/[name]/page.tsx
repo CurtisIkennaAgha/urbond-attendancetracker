@@ -752,8 +752,7 @@ export default function SessionPage() {
             if (navigator.share) {
               navigator.share({
                 title: `Attendance Register: ${sessionName}`,
-                text: msg,
-                url
+                text: msg
               });
             } else {
               alert('Sharing is not supported on this device/browser.');
