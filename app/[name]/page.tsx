@@ -35,9 +35,10 @@ function NeedHelpModal({ onClose }: { onClose: () => void }) {
           <li><b>Clear Register:</b> Click the <span className="inline-block px-2 py-1 bg-gray-300 rounded text-xs">Clear</span> button to remove all attendance for the current session and date.</li>
           <li><b>No Session on Date:</b> If there is no session on a date, check the box under the auto-filled message to keep the register empty and prevent auto-fill for that date. Uncheck to restore auto-fill.</li>
           <li><b>Edit Session Name:</b> Click the <span className="inline-block px-2 py-1 bg-gray-300 rounded text-xs">Edit</span> button to rename the session.</li>
-          <li><b>Delete Session:</b> Click the <span className="inline-block px-2 py-1 bg-gray-300 rounded text-xs">Remove</span> button to delete the session and all its data.</li>
+          <li><b>Delete Session:</b> Open the <span className="inline-block px-2 py-1 bg-gray-300 rounded text-xs">Edit</span> modal, then click the <span className="inline-block px-2 py-1 bg-gray-300 rounded text-xs">Delete this session</span> link below the fields to delete the session and all its data.</li>
           <li><b>View Data:</b> Use the <span className="inline-block px-2 py-1 bg-gray-300 rounded text-xs">View Data</span> button to see session data and analytics.</li>
-          <li><b>Go Back:</b> Use the <span className="inline-block px-2 py-1 bg-gray-200 rounded text-xs">Go Back</span> button at the bottom left to return to the previous page.</li>
+          <li><b>Download Data:</b> Download buttons for each table are now located <b>underneath</b> the table titles, not next to them. Choose your format and click Download.</li>
+          <li><b>Go Back:</b> Use the <span className="inline-block px-2 py-1 bg-gray-200 rounded text-xs">Go Back</span> button at the <b>top left</b> of the page to return to the previous page.</li>
         </ol>
         <div className="mb-4 text-gray-600 text-sm text-center">If you need more help, contact your administrator.</div>
         <div className="flex justify-center">
@@ -138,7 +139,7 @@ function SessionHeader({ sessionId, sessionName, registerDate, setRegisterDate, 
     <header className="bg-white mb-3 "> 
       <h1 className="text-2xl text-gray-950 font-bold">Session: {sessionName}</h1>
       <div className="flex items-center gap-2 ">{/* mb-1 instead of mb-2 to halve the gap */}
-        <p className="text-gray-600 mb-0">Session Date:</p>
+        <p className="text-gray-600 mb-0"> Date:</p>
         <button
           type="button"
           aria-label={`Previous ${frequency === "weekly" ? "week" : frequency === "monthly" ? "month" : "day"}`}

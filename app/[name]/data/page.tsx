@@ -374,16 +374,18 @@ export default function SessionDataPage() {
   return (
     <div className="p-8 relative">
       {/* Title row with Download All Data button inline */}
-      <div className="flex items-center mb-6" style={{ color: 'black', gap: 12 }}>
-        <h1 className="text-2xl text-gray-950 font-bold mb-0" style={{ marginRight: 0 }}>{sessionName} Data</h1>
-        <select value={allDataDownloadType} onChange={e => setAllDataDownloadType(e.target.value)} style={{ padding: 4, fontSize: 12, color: 'black', marginLeft: 8 }}>
-          <option value="Google Sheets">Google Sheets</option>
-          <option value="Excel">Excel</option>
-          <option value="CSV">CSV</option>
-        </select>
-        <button onClick={handleDownloadAllData} style={{ padding: '6px 18px', fontSize: 13, border: '1px solid #222', background: '#eee', cursor: 'pointer', color: 'black', fontWeight: 600, borderRadius: 6, marginLeft: 4 }}>
-          Download All Data
-        </button>
+      <div className="mb-6" style={{ color: 'black' }}>
+        <h1 className="text-2xl text-gray-950 font-bold mb-2">{sessionName} Data</h1>
+        <div className="flex items-center" style={{ gap: 8 }}>
+          <select value={allDataDownloadType} onChange={e => setAllDataDownloadType(e.target.value)} style={{ padding: 4, fontSize: 12, color: 'black' }}>
+            <option value="Google Sheets">Google Sheets</option>
+            <option value="Excel">Excel</option>
+            <option value="CSV">CSV</option>
+          </select>
+          <button onClick={handleDownloadAllData} style={{ padding: '6px 18px', fontSize: 13, border: '1px solid #222', background: '#eee', cursor: 'pointer', color: 'black', fontWeight: 600, borderRadius: 6 }}>
+            Download All Data
+          </button>
+        </div>
       </div>
       <button
         className="absolute top-4 right-4 bg-gray-200 text-gray-800 px-4 py-2 rounded shadow hover:bg-gray-300 z-50"
@@ -391,49 +393,51 @@ export default function SessionDataPage() {
       >
         Go Back
       </button>
-      <div className="flex items-center mb-2" style={{ color: 'black' }}>
-        <h2 className="text-lg font-semibold flex items-center mb-0" style={{ color: 'black' }}>
-          <button
-            aria-label={showAttendance ? 'Collapse Attendance Table' : 'Expand Attendance Table'}
-            title={showAttendance ? 'Collapse table' : 'Expand table'}
-            onClick={() => setShowAttendance(v => !v)}
-            style={{
-              marginRight: 8,
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              padding: '2px 8px',
-              borderRadius: 6,
-              transition: 'background 0.2s, box-shadow 0.2s',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-            }}
-            onMouseOver={e => e.currentTarget.style.background = '#f3f4f6'}
-            onMouseOut={e => e.currentTarget.style.background = 'none'}
-            onFocus={e => e.currentTarget.style.background = '#f3f4f6'}
-            onBlur={e => e.currentTarget.style.background = 'none'}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+      <div className="mb-2" style={{ color: 'black' }}>
+        <div className="flex items-center mb-1">
+          <h2 className="text-lg font-semibold flex items-center mb-0" style={{ color: 'black' }}>
+            <button
+              aria-label={showAttendance ? 'Collapse Attendance Table' : 'Expand Attendance Table'}
+              title={showAttendance ? 'Collapse table' : 'Expand table'}
+              onClick={() => setShowAttendance(v => !v)}
               style={{
-                transform: showAttendance ? 'rotate(90deg)' : 'rotate(0deg)',
-                transition: 'transform 0.2s, stroke 0.2s',
-                stroke: '#222',
+                marginRight: 8,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '2px 8px',
+                borderRadius: 6,
+                transition: 'background 0.2s, box-shadow 0.2s',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
               }}
-              className="chevron-icon"
+              onMouseOver={e => e.currentTarget.style.background = '#f3f4f6'}
+              onMouseOut={e => e.currentTarget.style.background = 'none'}
+              onFocus={e => e.currentTarget.style.background = '#f3f4f6'}
+              onBlur={e => e.currentTarget.style.background = 'none'}
             >
-              <polyline points="6 8 10 12 14 8" stroke={showAttendance ? '#111' : '#222'} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span style={{ marginLeft: 4, fontSize: 13, color: '#111', fontWeight: 500, letterSpacing: 0.2 }}>{showAttendance ? 'Collapse' : 'Expand'}</span>
-          </button>
-          Attendance Spreadsheet
-        </h2>
-        <div className="flex items-center ml-4" style={{ gap: 8 }}>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{
+                  transform: showAttendance ? 'rotate(90deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s, stroke 0.2s',
+                  stroke: '#222',
+                }}
+                className="chevron-icon"
+              >
+                <polyline points="6 8 10 12 14 8" stroke={showAttendance ? '#111' : '#222'} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span style={{ marginLeft: 4, fontSize: 13, color: '#111', fontWeight: 500, letterSpacing: 0.2 }}>{showAttendance ? 'Collapse' : 'Expand'}</span>
+            </button>
+            Attendance Spreadsheet
+          </h2>
+        </div>
+        <div className="flex items-center ml-0 mb-2" style={{ gap: 8 }}>
           <select value={downloadType} onChange={e => setDownloadType(e.target.value)} style={{ padding: 4, fontSize: 12, color: 'black' }}>
             <option value="Google Sheets">Google Sheets</option>
             <option value="Excel">Excel</option>
@@ -483,49 +487,51 @@ export default function SessionDataPage() {
       )}
 
       {/* All sessions spreadsheet */}
-      <div className="flex items-center mb-2" style={{ color: 'black', marginTop: 24 }}>
-        <h2 className="text-lg font-semibold flex items-center mb-0" style={{ color: 'black' }}>
-          <button
-            aria-label={showAllSessions ? 'Collapse All Sessions Table' : 'Expand All Sessions Table'}
-            title={showAllSessions ? 'Collapse table' : 'Expand table'}
-            onClick={() => setShowAllSessions(v => !v)}
-            style={{
-              marginRight: 8,
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              padding: '2px 8px',
-              borderRadius: 6,
-              transition: 'background 0.2s, box-shadow 0.2s',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-            }}
-            onMouseOver={e => e.currentTarget.style.background = '#f3f4f6'}
-            onMouseOut={e => e.currentTarget.style.background = 'none'}
-            onFocus={e => e.currentTarget.style.background = '#f3f4f6'}
-            onBlur={e => e.currentTarget.style.background = 'none'}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+      <div className="mb-2" style={{ color: 'black', marginTop: 24 }}>
+        <div className="flex items-center mb-1">
+          <h2 className="text-lg font-semibold flex items-center mb-0" style={{ color: 'black' }}>
+            <button
+              aria-label={showAllSessions ? 'Collapse All Sessions Table' : 'Expand All Sessions Table'}
+              title={showAllSessions ? 'Collapse table' : 'Expand table'}
+              onClick={() => setShowAllSessions(v => !v)}
               style={{
-                transform: showAllSessions ? 'rotate(90deg)' : 'rotate(0deg)',
-                transition: 'transform 0.2s, stroke 0.2s',
-                stroke: '#222',
+                marginRight: 8,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '2px 8px',
+                borderRadius: 6,
+                transition: 'background 0.2s, box-shadow 0.2s',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
               }}
-              className="chevron-icon"
+              onMouseOver={e => e.currentTarget.style.background = '#f3f4f6'}
+              onMouseOut={e => e.currentTarget.style.background = 'none'}
+              onFocus={e => e.currentTarget.style.background = '#f3f4f6'}
+              onBlur={e => e.currentTarget.style.background = 'none'}
             >
-              <polyline points="6 8 10 12 14 8" stroke={showAllSessions ? '#111' : '#222'} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span style={{ marginLeft: 4, fontSize: 13, color: '#111', fontWeight: 500, letterSpacing: 0.2 }}>{showAllSessions ? 'Collapse' : 'Expand'}</span>
-          </button>
-          Attendance Spreadsheet (All Sessions)
-        </h2>
-        <div className="flex items-center ml-4" style={{ gap: 8 }}>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{
+                  transform: showAllSessions ? 'rotate(90deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s, stroke 0.2s',
+                  stroke: '#222',
+                }}
+                className="chevron-icon"
+              >
+                <polyline points="6 8 10 12 14 8" stroke={showAllSessions ? '#111' : '#222'} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span style={{ marginLeft: 4, fontSize: 13, color: '#111', fontWeight: 500, letterSpacing: 0.2 }}>{showAllSessions ? 'Collapse' : 'Expand'}</span>
+            </button>
+            Attendance Spreadsheet (All Sessions)
+          </h2>
+        </div>
+        <div className="flex items-center ml-0 mb-2" style={{ gap: 8 }}>
           <select value={allDownloadType} onChange={e => setAllDownloadType(e.target.value)} style={{ padding: 4, fontSize: 12, color: 'black' }}>
             <option value="Google Sheets">Google Sheets</option>
             <option value="Excel">Excel</option>
@@ -576,49 +582,51 @@ export default function SessionDataPage() {
         )
       )}
       {/* All attendees spreadsheet */}
-      <div className="flex items-center mb-2" style={{ color: 'black', marginTop: 24 }}>
-        <h2 className="text-lg font-semibold flex items-center mb-0" style={{ color: 'black' }}>
-          <button
-            aria-label={showAllAttendees ? 'Collapse All Attendees Table' : 'Expand All Attendees Table'}
-            title={showAllAttendees ? 'Collapse table' : 'Expand table'}
-            onClick={() => setShowAllAttendees(v => !v)}
-            style={{
-              marginRight: 8,
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              padding: '2px 8px',
-              borderRadius: 6,
-              transition: 'background 0.2s, box-shadow 0.2s',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-            }}
-            onMouseOver={e => e.currentTarget.style.background = '#f3f4f6'}
-            onMouseOut={e => e.currentTarget.style.background = 'none'}
-            onFocus={e => e.currentTarget.style.background = '#f3f4f6'}
-            onBlur={e => e.currentTarget.style.background = 'none'}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+      <div className="mb-2" style={{ color: 'black', marginTop: 24 }}>
+        <div className="flex items-center mb-1">
+          <h2 className="text-lg font-semibold flex items-center mb-0" style={{ color: 'black' }}>
+            <button
+              aria-label={showAllAttendees ? 'Collapse All Attendees Table' : 'Expand All Attendees Table'}
+              title={showAllAttendees ? 'Collapse table' : 'Expand table'}
+              onClick={() => setShowAllAttendees(v => !v)}
               style={{
-                transform: showAllAttendees ? 'rotate(90deg)' : 'rotate(0deg)',
-                transition: 'transform 0.2s, stroke 0.2s',
-                stroke: '#222',
+                marginRight: 8,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '2px 8px',
+                borderRadius: 6,
+                transition: 'background 0.2s, box-shadow 0.2s',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
               }}
-              className="chevron-icon"
+              onMouseOver={e => e.currentTarget.style.background = '#f3f4f6'}
+              onMouseOut={e => e.currentTarget.style.background = 'none'}
+              onFocus={e => e.currentTarget.style.background = '#f3f4f6'}
+              onBlur={e => e.currentTarget.style.background = 'none'}
             >
-              <polyline points="6 8 10 12 14 8" stroke={showAllAttendees ? '#111' : '#222'} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span style={{ marginLeft: 4, fontSize: 13, color: '#111', fontWeight: 500, letterSpacing: 0.2 }}>{showAllAttendees ? 'Collapse' : 'Expand'}</span>
-          </button>
-          Attendees Spreadsheet (All Sessions)
-        </h2>
-        <div className="flex items-center ml-4" style={{ gap: 8 }}>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{
+                  transform: showAllAttendees ? 'rotate(90deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s, stroke 0.2s',
+                  stroke: '#222',
+                }}
+                className="chevron-icon"
+              >
+                <polyline points="6 8 10 12 14 8" stroke={showAllAttendees ? '#111' : '#222'} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span style={{ marginLeft: 4, fontSize: 13, color: '#111', fontWeight: 500, letterSpacing: 0.2 }}>{showAllAttendees ? 'Collapse' : 'Expand'}</span>
+            </button>
+            Attendees Spreadsheet (All Sessions)
+          </h2>
+        </div>
+        <div className="flex items-center ml-0 mb-2" style={{ gap: 8 }}>
           <select value={attendeesDownloadType} onChange={e => setAttendeesDownloadType(e.target.value)} style={{ padding: 4, fontSize: 12, color: 'black' }}>
             <option value="Google Sheets">Google Sheets</option>
             <option value="Excel">Excel</option>
