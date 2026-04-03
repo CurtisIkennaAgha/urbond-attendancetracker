@@ -722,7 +722,6 @@ export default function SessionPage() {
           Data
         </button>
         <button className="px-3 py-1.5 bg-gray-300 text-gray-800 rounded" onClick={() => setShowSessionEditModal(true)}>Edit</button>
-        <button className="px-3 py-1.5 bg-gray-300 text-gray-800 rounded" onClick={() => setShowSessionRemoveModal(true)}>Remove</button>
         <button
           className="px-3 py-1.5 bg-gray-300 text-gray-800 rounded"
           onClick={async () => {
@@ -742,9 +741,14 @@ export default function SessionPage() {
         <button
           onClick={() => {
             // Share button handler (copied from SessionHeader)
-            const dateStr = registerDate;
-            const url = typeof window !== 'undefined' ? window.location.origin + `/${encodeURIComponent(sessionName)}?date=${dateStr}` : '';
-            const msg = `I updated the attendance register for ${sessionName} on ${dateStr}, click here to look: ${url}`;
+            // Format date as '12 April 2026'
+            const dateObj = new Date(registerDate);
+            const day = dateObj.getDate();
+            const month = dateObj.toLocaleString('default', { month: 'long' });
+            const year = dateObj.getFullYear();
+            const formattedDate = `${day} ${month} ${year}`;
+            const url = typeof window !== 'undefined' ? window.location.origin + `/${encodeURIComponent(sessionName)}?date=${registerDate}` : '';
+            const msg = `I updated the attendance register for ${sessionName} on ${formattedDate}, click here to look: ${url}`;
             if (navigator.share) {
               navigator.share({
                 title: `Attendance Register: ${sessionName}`,
@@ -799,7 +803,18 @@ export default function SessionPage() {
               <option value="monthly">Monthly</option>
             </select>
             {editError && <div className="text-red-500 mb-2">{editError}</div>}
-            <div className="flex justify-center gap-4">
+            <div className="w-full flex flex-col items-center">
+              <button
+                className="mt-2 mb-4 p-0 border-none bg-none text-black underline hover:text-red-600 text-xs cursor-pointer"
+                style={{ background: 'none', border: 'none' }}
+                onClick={() => { setShowSessionEditModal(false); setShowSessionRemoveModal(true); }}
+                disabled={editLoading}
+                title="Delete this session"
+              >
+                Delete this session
+              </button>
+            </div>
+            <div className="flex justify-center gap-4 items-center mt-2">
               <button
                 className="px-4 py-2 bg-gray-200 rounded text-gray-800 hover:bg-gray-300"
                 onClick={() => setShowSessionEditModal(false)}
@@ -808,7 +823,7 @@ export default function SessionPage() {
                 Cancel
               </button>
               <button
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
                 onClick={handleSaveSessionName}
                 disabled={editSessionName.trim() === "" || editLoading}
               >
