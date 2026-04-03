@@ -406,9 +406,7 @@ export default function SessionPage() {
         if (autoFilled && !autoFillSaved) {
           await saveAllAutoFilledRows();
         }
-        console.log('[saveOrUpdateAttendance] idx:', idx, 'name:', name, 'age:', age, 'checked:', checked, 'sessionId:', sessionId, 'registerDate:', registerDate);
         if (!sessionId || !registerDate || !name || !age) {
-          console.warn('[saveOrUpdateAttendance] Missing required data', { sessionId, registerDate, name, age });
           return;
         }
         // Find or create attendee
@@ -416,41 +414,32 @@ export default function SessionPage() {
         const trimmedName = name.toString().trim();
         const ageNumber = Number(age);
         if (isNaN(ageNumber)) {
-          console.warn('[saveOrUpdateAttendance] Invalid age', age);
           return;
         }
-        const { data: foundAttendee, error: findAttendeeError } = await supabase
+        const { data: foundAttendee } = await supabase
           .from('attendees')
           .select('id')
           .eq('name', trimmedName)
           .eq('age', ageNumber)
           .single();
-        console.log('[saveOrUpdateAttendance] foundAttendee:', foundAttendee, 'error:', findAttendeeError);
         if (foundAttendee && foundAttendee.id) {
           attendeeId = foundAttendee.id;
         } else {
           // Create new attendee
-          const { data: newAttendee, error: newAttendeeError } = await supabase
+          const { data: newAttendee } = await supabase
             .from('attendees')
             .insert([{ name: trimmedName, age: ageNumber }])
             .select('id')
             .single();
-          console.log('[saveOrUpdateAttendance] newAttendee:', newAttendee, 'error:', newAttendeeError);
           if (newAttendee && newAttendee.id) {
             attendeeId = newAttendee.id;
           } else {
-            console.warn('[saveOrUpdateAttendance] Failed to create attendee');
             return;
           }
         }
         if (checked) {
-          console.log('[saveOrUpdateAttendance] ATTEMPTING UPSERT attendance', {
-            session_id: sessionId,
-            attendee_id: attendeeId,
-            attended_at: registerDate
-          });
           // Upsert attendance (insert if not exists)
-          const { error: upsertError, data: upsertData } = await supabase
+          await supabase
             .from('attendance')
             .upsert([
               {
@@ -459,21 +448,14 @@ export default function SessionPage() {
                 attended_at: registerDate,
               },
             ], { onConflict: 'session_id,attendee_id,attended_at' });
-          console.log('[saveOrUpdateAttendance] upsert attendance result:', upsertData, 'error:', upsertError);
         } else {
-          console.log('[saveOrUpdateAttendance] ATTEMPTING DELETE attendance', {
-            session_id: sessionId,
-            attendee_id: attendeeId,
-            attended_at: registerDate
-          });
-          // Remove attendance
-          const { error: deleteError, data: deleteData } = await supabase
+          // Remove attendance ONLY for this attendeeId
+          await supabase
             .from('attendance')
             .delete()
             .eq('session_id', sessionId)
             .eq('attendee_id', attendeeId)
             .eq('attended_at', registerDate);
-          console.log('[saveOrUpdateAttendance] delete attendance result:', deleteData, 'error:', deleteError);
         }
         // Refresh UI
         const registers = await fetchRegisters(sessionId, registerDate);
@@ -483,18 +465,22 @@ export default function SessionPage() {
       const handleToggle = (idx: number) => async (e: React.ChangeEvent<HTMLInputElement>) => {
         setRegisterEdited(true);
         const checked = e.target.checked;
-        if (!checked) {
-          setRemovingAttendeeIdx(idx);
-        } else {
-          setCheckedStates(prev => {
-            const copy = [...prev];
-            copy[idx] = true;
-            return copy;
-          });
-          // Save attendance for this attendee
-          const reg = registers[idx];
-          await saveOrUpdateAttendance(idx, reg.name, reg.age, true);
-        }
+          if (!checked) {
+            // If auto-filled and not saved, save all auto-filled rows first
+            if (autoFilled && !autoFillSaved) {
+              await saveAllAutoFilledRows();
+            }
+            setRemovingAttendeeIdx(idx);
+          } else {
+            setCheckedStates(prev => {
+              const copy = [...prev];
+              copy[idx] = true;
+              return copy;
+            });
+            // Save attendance for this attendee
+            const reg = registers[idx];
+            await saveOrUpdateAttendance(idx, reg.name, reg.age, true);
+          }
       };
 
       const handleNameChange = (idx: number) => async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -548,7 +534,11 @@ export default function SessionPage() {
               const checked = e.target.checked;
               setNewChecked(checked);
               if (checked) {
-                await handleNewRegisterSave(true);
+                  // If auto-filled and not saved, save all auto-filled rows first
+                  if (autoFilled && !autoFillSaved) {
+                    await saveAllAutoFilledRows();
+                  }
+                  await handleNewRegisterSave(true);
               }
             }}
           />
