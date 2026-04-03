@@ -138,7 +138,7 @@ function Header({ search, setSearch }: { search: string; setSearch: (value: stri
   return (
     <header className="bg-black shadow p-3 h-20 flex items-center gap-4">
       <img src="/logo.jpg" alt="Logo" className="w-12 sm:w-16 md:w-20 object-contain" />
-      <h1 className="font-bold text-white text-lg sm:text-xl md:text-2xl">Attendance Tracker</h1>
+      <h1 className="font-bold text-white text-xs sm:text-sm md:text-lg">Attendance Tracker</h1>
       <input
         type="text"
         placeholder="Search sessions..."

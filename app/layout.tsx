@@ -30,6 +30,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${poppins.variable}`}>
+      <head>
+        <link rel="icon" href="/images.jpeg" type="image/jpeg" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

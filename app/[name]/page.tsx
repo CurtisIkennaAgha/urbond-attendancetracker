@@ -661,13 +661,15 @@ export default function SessionPage() {
 
   return (
  <div className="p-8 relative min-h-screen">
-      <button
-        className="fixed bottom-4 left-4 text-gray-700 hover:underline hover:text-black bg-transparent border-none shadow-none p-0 m-0 text-lg flex items-center z-50"
-        style={{ background: 'none', border: 'none' }}
-        onClick={() => router.back()}
-      >
-        <span className="mr-1">&#8592;</span> Go Back
-      </button>
+      <div className="mb-2">
+        <button
+          className="text-gray-700 hover:underline hover:text-black bg-transparent border-none shadow-none p-0 m-0 text-lg flex items-center"
+          style={{ background: 'none', border: 'none' }}
+          onClick={() => router.back()}
+        >
+          <span className="mr-1">&#8592;</span> Go Back
+        </button>
+      </div>
       {removingAttendeeIdx !== null && (
         <RemoveAttendeeModal
           onClose={() => {
