@@ -1,6 +1,6 @@
 
 "use client";
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 // Simple empty modal for Need Help
@@ -78,6 +78,27 @@ function RemoveAttendeeModal({ onClose, onRemove, title }: { onClose: () => void
 }
 
 function SessionHeader({ sessionId, sessionName, registerDate, setRegisterDate, frequency }: SessionHeaderProps) {
+  const [lastUpdated, setLastUpdated] = useState<string>("");
+  useEffect(() => {
+    async function fetchLastUpdated() {
+      if (!sessionId) return;
+      const { data: attendance } = await supabase
+        .from('attendance')
+        .select('attended_at')
+        .eq('session_id', sessionId);
+      if (attendance && attendance.length > 0) {
+        const dates = attendance.map((a: any) => new Date(a.attended_at));
+        const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+        const day = String(maxDate.getDate()).padStart(2, '0');
+        const month = String(maxDate.getMonth() + 1).padStart(2, '0');
+        const year = maxDate.getFullYear();
+        setLastUpdated(`${day}/${month}/${year}`);
+      } else {
+        setLastUpdated("");
+      }
+    }
+    fetchLastUpdated();
+  }, [sessionId]);
   // Helper to change date by frequency
   function changeDateBy(direction: number) {
     const date = new Date(registerDate);
@@ -97,6 +118,21 @@ function SessionHeader({ sessionId, sessionName, registerDate, setRegisterDate, 
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
     setRegisterDate(`${yyyy}-${mm}-${dd}`);
+  }
+  // Share button handler
+  function handleShare() {
+    const dateStr = registerDate;
+    const url = typeof window !== 'undefined' ? window.location.origin + `/${encodeURIComponent(sessionName)}?date=${dateStr}` : '';
+    const msg = `I updated the attendance register for ${sessionName} on ${dateStr}, click here to look: ${url}`;
+    if (navigator.share) {
+      navigator.share({
+        title: `Attendance Register: ${sessionName}`,
+        text: msg,
+        url
+      });
+    } else {
+      alert('Sharing is not supported on this device/browser.');
+    }
   }
   return (
     <header className="bg-white mb-3 "> 
@@ -123,7 +159,14 @@ function SessionHeader({ sessionId, sessionName, registerDate, setRegisterDate, 
           className="px-2 py-1 text-lg text-gray-600 hover:text-black"
           onClick={() => changeDateBy(1)}
         >&#8594;</button>
-        <span className="ml-4 text-sm text-gray-500">Frequency: <b>{frequency.charAt(0).toUpperCase() + frequency.slice(1)}</b></span>
+      </div>
+      <div className="mt-1 text-sm text-gray-500 flex gap-6 items-center">
+        <span>
+          Frequency: <b>{frequency.charAt(0).toUpperCase() + frequency.slice(1)}</b>
+        </span>
+        <span>
+          Last updated: <b>{lastUpdated ? lastUpdated : 'No attendance yet'}</b>
+        </span>
       </div>
     </header>
   );
@@ -215,6 +258,7 @@ async function fetchRegisters(sessionId: string, date: string) {
 }
 
 export default function SessionPage() {
+  const searchParams = useSearchParams();
   // Frequency state for the session
   const [frequency, setFrequency] = useState<string>("one-off");
   // Track if user marks 'no session' for this date
@@ -348,6 +392,11 @@ export default function SessionPage() {
   const [newChecked, setNewChecked] = useState(false);
   // State for the register date
   const [registerDate, setRegisterDate] = useState(() => {
+    // Check for ?date=YYYY-MM-DD in the URL
+    const dateParam = searchParams?.get('date');
+    if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+      return dateParam;
+    }
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -689,6 +738,27 @@ export default function SessionPage() {
           }}
         >
           Clear
+        </button>
+        <button
+          onClick={() => {
+            // Share button handler (copied from SessionHeader)
+            const dateStr = registerDate;
+            const url = typeof window !== 'undefined' ? window.location.origin + `/${encodeURIComponent(sessionName)}?date=${dateStr}` : '';
+            const msg = `I updated the attendance register for ${sessionName} on ${dateStr}, click here to look: ${url}`;
+            if (navigator.share) {
+              navigator.share({
+                title: `Attendance Register: ${sessionName}`,
+                text: msg,
+                url
+              });
+            } else {
+              alert('Sharing is not supported on this device/browser.');
+            }
+          }}
+          className="px-3 py-1.5 bg-gray-300 text-gray-800 rounded"
+          title="Share this register"
+        >
+          Share
         </button>
         <button
           className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 text-lg font-bold border border-gray-300 hover:bg-gray-300"
