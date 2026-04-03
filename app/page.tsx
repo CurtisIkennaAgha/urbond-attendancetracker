@@ -256,6 +256,7 @@ export default function Home() {
             const form = e.target;
             const name = form.sessionName.value;
             const initialDate = form.initialDate.value;
+            const frequency = form.sessionFrequency.value;
             // Use initialDate as last_updated for now
             const { data, error } = await supabase
               .from('Sessions')
@@ -263,6 +264,7 @@ export default function Home() {
                 {
                   name,
                   last_updated: initialDate ? initialDate + 'T00:00:00+00' : null,
+                  frequency,
                 }
               ]);
             setIsModalOpen(false);
@@ -282,6 +284,17 @@ export default function Home() {
             className=" text-black w-full shadow-lg p-2 block bg-gray-100 mb-2"
             required
           />
+          <label className="text-gray-500 ">Session Frequency</label>
+          <select
+            name="sessionFrequency"
+            className="text-black w-full shadow-lg p-2 block bg-gray-100 mb-2"
+            defaultValue="one-off"
+            required
+          >
+            <option value="one-off">One-off</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
           <button type="submit" className="bg-black text-white px-4 py-2 rounded">Save</button>
         </form>
       </div>

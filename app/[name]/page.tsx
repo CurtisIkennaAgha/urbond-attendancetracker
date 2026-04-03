@@ -59,6 +59,7 @@ interface SessionHeaderProps {
   sessionName: string;
   registerDate: string;
   setRegisterDate: (v: string) => void;
+  frequency: string; // "weekly" | "one-off" | "monthly"
 }
 
 // Modal with close handler
@@ -76,11 +77,22 @@ function RemoveAttendeeModal({ onClose, onRemove, title }: { onClose: () => void
   );
 }
 
-function SessionHeader({ sessionId, sessionName, registerDate, setRegisterDate }: SessionHeaderProps) {
-  // Helper to change date by delta days
-  function changeDateBy(delta: number) {
+function SessionHeader({ sessionId, sessionName, registerDate, setRegisterDate, frequency }: SessionHeaderProps) {
+  // Helper to change date by frequency
+  function changeDateBy(direction: number) {
     const date = new Date(registerDate);
-    date.setDate(date.getDate() + delta);
+    if (frequency === "weekly") {
+      date.setDate(date.getDate() + 7 * direction);
+    } else if (frequency === "monthly") {
+      const d = date.getDate();
+      date.setMonth(date.getMonth() + direction);
+      // Try to preserve day if possible (e.g., 31st to 30th/28th)
+      if (date.getDate() < d) {
+        date.setDate(0); // Go to last day of previous month
+      }
+    } else {
+      date.setDate(date.getDate() + direction);
+    }
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
@@ -93,7 +105,7 @@ function SessionHeader({ sessionId, sessionName, registerDate, setRegisterDate }
         <p className="text-gray-600 mb-0">Session Date:</p>
         <button
           type="button"
-          aria-label="Previous day"
+          aria-label={`Previous ${frequency === "weekly" ? "week" : frequency === "monthly" ? "month" : "day"}`}
           className="px-2 py-1 text-lg text-gray-600 hover:text-black"
           onClick={() => changeDateBy(-1)}
         >&#8592;</button>
@@ -107,12 +119,12 @@ function SessionHeader({ sessionId, sessionName, registerDate, setRegisterDate }
         />
         <button
           type="button"
-          aria-label="Next day"
+          aria-label={`Next ${frequency === "weekly" ? "week" : frequency === "monthly" ? "month" : "day"}`}
           className="px-2 py-1 text-lg text-gray-600 hover:text-black"
           onClick={() => changeDateBy(1)}
         >&#8594;</button>
+        <span className="ml-4 text-sm text-gray-500">Frequency: <b>{frequency.charAt(0).toUpperCase() + frequency.slice(1)}</b></span>
       </div>
-
     </header>
   );
 }
@@ -203,14 +215,17 @@ async function fetchRegisters(sessionId: string, date: string) {
 }
 
 export default function SessionPage() {
+  // Frequency state for the session
+  const [frequency, setFrequency] = useState<string>("one-off");
   // Track if user marks 'no session' for this date
   const [noSession, setNoSession] = useState(false);
   // Track if the register was edited (for auto-filled new dates)
   const [registerEdited, setRegisterEdited] = useState(false);
   // Track if auto-filled rows have been saved for this date
   const [autoFillSaved, setAutoFillSaved] = useState(false);
-  // State for editing session name in modal
+  // State for editing session name and frequency in modal
   const [editSessionName, setEditSessionName] = useState("");
+  const [editFrequency, setEditFrequency] = useState<string>("one-off");
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
 
@@ -220,24 +235,14 @@ export default function SessionPage() {
     setEditLoading(true);
     setEditError("");
     try {
-      // Debug: log sessionId, type, and editSessionName
-      console.log('Attempting to update session', { sessionId, sessionIdType: typeof sessionId, editSessionName });
-      // Update session name in Supabase
+      // Update session name and frequency in Supabase
       const result = await supabase
         .from('Sessions')
-        .update({ name: editSessionName.trim() })
+        .update({ name: editSessionName.trim(), frequency: editFrequency })
         .eq('id', sessionId);
-      console.log('Supabase update result:', result);
-      const { error, data } = result;
-      // Fetch the session by ID after update to verify
-      const verify = await supabase
-        .from('Sessions')
-        .select('*')
-        .eq('id', sessionId)
-        .single();
-      console.log('Session row after update:', verify);
+      const { error } = result;
       if (error) {
-        setEditError(error.message || 'Failed to update session name.');
+        setEditError(error.message || 'Failed to update session.');
         setEditLoading(false);
         return;
       }
@@ -247,6 +252,7 @@ export default function SessionPage() {
       if (editSessionName !== sessionName) {
         router.replace(`/${encodeURIComponent(editSessionName)}`);
       }
+      setFrequency(editFrequency); // update frequency in main state
     } catch (e) {
       setEditError('Unexpected error.');
       setEditLoading(false);
@@ -569,10 +575,9 @@ export default function SessionPage() {
       setLoading(true);
       setAutoFilled(false);
       setRegisterEdited(false); // Reset edit state on new date/session
-      console.log('Session name for fetch:', sessionName);
       const { data, error } = await supabase
         .from('Sessions')
-        .select('id')
+        .select('id, frequency')
         .eq('name', sessionName)
         .single();
       if (error) {
@@ -583,10 +588,10 @@ export default function SessionPage() {
       }
       const id = data?.id || "";
       setSessionId(id);
+      setFrequency(data?.frequency || "one-off");
+      setEditFrequency(data?.frequency || "one-off");
       setError(null);
-      // Use the selected registerDate if set, otherwise don't fetch
       if (registerDate) {
-        // Enhanced: detect if auto-filled
         const { data: attendance } = await supabase
           .from('attendance')
           .select('attendee_id')
@@ -594,10 +599,8 @@ export default function SessionPage() {
           .eq('attended_at', registerDate);
         let autoFill = false;
         if (!attendance || attendance.length === 0) {
-          // No attendance for this date, will auto-fill
           autoFill = true;
         }
-        // If noSession is true, do not auto-fill
         if (noSession) {
           setRegisters([]);
           setAutoFilled(false);
@@ -606,14 +609,13 @@ export default function SessionPage() {
           setRegisters(registers);
           setAutoFilled(autoFill);
         }
-        setRegisterEdited(false); // Reset edit state for new auto-filled date
+        setRegisterEdited(false);
       } else {
         setRegisters([]);
       }
       setLoading(false);
     }
     if (sessionName) fetchSessionIdAndRegisters();
-    // Keep editSessionName in sync with sessionName
     setEditSessionName(sessionName);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionName, registerDate, showSessionEditModal]);
@@ -671,6 +673,7 @@ export default function SessionPage() {
         sessionName={sessionName}
         registerDate={registerDate}
         setRegisterDate={setRegisterDate}
+        frequency={frequency}
       />
       <div className="flex items-center gap-2 mb-2">
         <button
@@ -709,7 +712,7 @@ export default function SessionPage() {
             )}
       </div>
 
-      {/* Edit Modal with session name input */}
+      {/* Edit Modal with session name and frequency input */}
       {showSessionEditModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-30">
           <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
@@ -723,6 +726,18 @@ export default function SessionPage() {
               onChange={e => setEditSessionName(e.target.value)}
               disabled={editLoading}
             />
+            <label className="block text-gray-700 mb-2 text-left" htmlFor="edit-session-frequency">Session Frequency</label>
+            <select
+              id="edit-session-frequency"
+              className="border p-2 w-full mb-4 text-black bg-gray-100"
+              value={editFrequency}
+              onChange={e => setEditFrequency(e.target.value)}
+              disabled={editLoading}
+            >
+              <option value="one-off">One-off</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
             {editError && <div className="text-red-500 mb-2">{editError}</div>}
             <div className="flex justify-center gap-4">
               <button
