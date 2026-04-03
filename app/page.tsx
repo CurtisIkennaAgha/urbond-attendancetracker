@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 function NeedHelpModal({ onClose }: { onClose: () => void }) {
   // Device detection: true if mobile, false if desktop
   const isMobile = typeof window !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(window.navigator.userAgent);
-  const videoSrc = isMobile ? '/mobilerecording.mp4' : '/desktoprecording.mp4';
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-auto text-left flex flex-col justify-start relative">
@@ -18,10 +17,25 @@ function NeedHelpModal({ onClose }: { onClose: () => void }) {
         </button>
         <h2 className="text-lg font-bold mb-4 text-gray-800 text-center">How to Use the Attendance Tracker</h2>
         <div className="mb-6">
-          <video controls className="mx-auto rounded shadow max-w-full max-h-[40vh]">
-            <source src={videoSrc} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+          {isMobile ? (
+            <video controls className="mx-auto rounded shadow max-w-full max-h-[40vh]">
+              <source src="/mobilerecording.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          ) : (
+            <div className="flex justify-center">
+              <iframe
+                width="560"
+                height="315"
+                src="https://www.youtube.com/embed/QEEyQb-0EME"
+                title="Attendance Tracker Desktop Walkthrough"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="mx-auto rounded shadow max-w-full max-h-[40vh]"
+              ></iframe>
+            </div>
+          )}
         </div>
         <ol className="list-decimal pl-5 mb-4 text-gray-700 space-y-2 text-sm">
           <li><b>View Sessions:</b> Select or search for a session to view its details and attendees.</li>

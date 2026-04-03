@@ -9,9 +9,12 @@ I developed this project for my employer local youth charity URBOND as i ntoiced
 
 Below is a step-by-step guide for using the Attendance Tracker. You can watch the full demo video below for a walkthrough of all features:
 
-<video src="./public/desktoprecording.mp4" controls width="600"></video>
 
-**[Download or open the demo video directly](./public/desktoprecording.mp4)**
+<div align="center">
+	<iframe width="560" height="315" src="https://www.youtube.com/embed/QEEyQb-0EME" title="Attendance Tracker Desktop Walkthrough" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+**[Watch the desktop walkthrough on YouTube](https://youtu.be/QEEyQb-0EME)**
 
 ### Steps Covered in the Demo Video
 
